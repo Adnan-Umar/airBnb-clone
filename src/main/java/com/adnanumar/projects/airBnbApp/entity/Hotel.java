@@ -45,4 +45,10 @@ public class Hotel {
     @Column(nullable = false)
     Boolean active;
 
+    @ManyToOne
+    User owner;
+
+    @OneToMany(mappedBy = "hotel")
+    List<Room> rooms;
+
 }

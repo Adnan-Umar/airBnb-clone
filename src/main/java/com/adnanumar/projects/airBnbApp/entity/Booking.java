@@ -2,13 +2,12 @@ package com.adnanumar.projects.airBnbApp.entity;
 
 import com.adnanumar.projects.airBnbApp.entity.enums.BookingStatus;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Set;
@@ -17,6 +16,9 @@ import java.util.Set;
 @Getter
 @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class Booking {
 
     @Id
@@ -50,10 +52,6 @@ public class Booking {
     @UpdateTimestamp
     LocalDateTime updatedAt;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "payment_id")
-    Payment payment;
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     BookingStatus bookingStatus;
@@ -65,5 +63,8 @@ public class Booking {
             inverseJoinColumns = @JoinColumn(name = "guest_id")
     )
     Set<Guest> guests;
+
+    @Column(nullable = false, precision = 10, scale = 2)
+    BigDecimal amount;
 
 }

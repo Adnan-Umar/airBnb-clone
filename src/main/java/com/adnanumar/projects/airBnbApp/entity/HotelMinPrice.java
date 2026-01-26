@@ -1,38 +1,38 @@
 package com.adnanumar.projects.airBnbApp.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 
-@Entity
 @Getter
 @Setter
-@Table(name = "hotel")
+@Entity
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class Hotel {
+@NoArgsConstructor
+public class HotelMinPrice {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "hotel_id", nullable = false)
+    Hotel hotel;
+
     @Column(nullable = false)
-    String name;
+    LocalDate date;
 
-    String city;
-
-    @Column(columnDefinition = "TEXT[]")
-    String[] photos;
-
-    @Column(columnDefinition = "TEXT[]")
-    String[] amenities;
+    @Column(nullable = false, precision = 10, scale = 2)
+    BigDecimal price;   // cheapest room price on a particular day
 
     @CreationTimestamp
     LocalDateTime createdAt;
@@ -40,17 +40,9 @@ public class Hotel {
     @UpdateTimestamp
     LocalDateTime updatedAt;
 
-    @Embedded
-    HotelContactInfo contactInfo;
-
-    @Column(nullable = false)
-    Boolean active;
-
-    @ManyToOne
-    User owner;
-
-    @OneToMany(mappedBy = "hotel")
-    @JsonIgnore
-    List<Room> rooms;
+    public HotelMinPrice(Hotel hotel, LocalDate date) {
+        this.hotel = hotel;
+        this.date = date;
+    }
 
 }

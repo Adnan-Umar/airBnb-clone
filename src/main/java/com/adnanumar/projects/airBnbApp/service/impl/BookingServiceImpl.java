@@ -9,11 +9,14 @@ import com.adnanumar.projects.airBnbApp.exception.ResourceNotFoundException;
 import com.adnanumar.projects.airBnbApp.exception.UnAuthorisedException;
 import com.adnanumar.projects.airBnbApp.repository.*;
 import com.adnanumar.projects.airBnbApp.service.BookingService;
+import com.adnanumar.projects.airBnbApp.service.CheckoutService;
+import com.adnanumar.projects.airBnbApp.strategy.PricingService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,7 +31,9 @@ import java.util.List;
 @Slf4j
 @RequiredArgsConstructor
 public class BookingServiceImpl implements BookingService {
+
     private final GuestRepository guestRepository;
+
     private final ModelMapper modelMapper;
 
     final HotelRepository hotelRepository;
@@ -38,6 +43,13 @@ public class BookingServiceImpl implements BookingService {
     final RoomRepository roomRepository;
 
     final InventoryRepository inventoryRepository;
+
+    final CheckoutService checkoutService;
+
+    final PricingService pricingService;
+
+    @Value("${frontend.url}")
+    String frontendUrl;
 
     @Override
     @Transactional
@@ -68,8 +80,23 @@ public class BookingServiceImpl implements BookingService {
 
         inventoryRepository.saveAll(inventoryList);
 
-        // Create the booking
-        // TODO: calculate dynamic amount
+        long nights = ChronoUnit.DAYS.between(
+                bookingRequest.getCheckInDate(),
+                bookingRequest.getCheckOutDate()
+        );
+
+        if (nights <= 0) {
+            throw new IllegalStateException("Invalid check-in / check-out dates");
+        }
+
+        BigDecimal amount = BigDecimal.ZERO;
+
+        for (Inventory inventory : inventoryList) {
+            BigDecimal nightlyPrice = pricingService.calculateDynamicPricing(inventory);
+            amount = amount.add(nightlyPrice);
+        }
+
+        amount = amount.multiply(BigDecimal.valueOf(bookingRequest.getRoomsCount()));
 
         Booking booking = Booking.builder()
                 .bookingStatus(BookingStatus.RESERVED)
@@ -79,7 +106,7 @@ public class BookingServiceImpl implements BookingService {
                 .checkOutDate(bookingRequest.getCheckOutDate())
                 .user(getCurrentUser())
                 .roomsCount(bookingRequest.getRoomsCount())
-                .amount(BigDecimal.TEN)
+                .amount(amount)
                 .build();
 
         booking = bookingRepository.save(booking);
@@ -97,7 +124,7 @@ public class BookingServiceImpl implements BookingService {
 
         User user = getCurrentUser();
 
-        if (user.equals(booking.getUser())) {
+        if (!user.getId().equals(booking.getUser().getId())) {
             throw new UnAuthorisedException("Booking doesn't belong to this user with id : " + user.getId());
         }
 
@@ -119,6 +146,28 @@ public class BookingServiceImpl implements BookingService {
         booking.setBookingStatus(BookingStatus.GUEST_ADDED);
         booking = bookingRepository.save(booking);
         return modelMapper.map(booking, BookingDto.class);
+    }
+
+    @Override
+    public String initiatePayments(Long bookingId) {
+        Booking booking = bookingRepository.findById(bookingId).orElseThrow(() ->
+                new ResourceNotFoundException("Booking not found with id : " + bookingId));
+        User user = getCurrentUser();
+        if (!user.getId().equals(booking.getUser().getId())) {
+            throw new UnAuthorisedException("Booking doesn't belong to this user with id : " + user.getId());
+        }
+
+        if (hasBookingExpired(booking)) {
+            throw new IllegalStateException("Booking has already expired");
+        }
+
+        String sessionUrl = checkoutService.getCheckoutSession(booking,
+                frontendUrl+"/payments/success", frontendUrl+"/payments/failure");
+
+        booking.setBookingStatus(BookingStatus.PAYMENTS_PENDING);
+        bookingRepository.save(booking);
+
+        return sessionUrl;
     }
 
     private boolean hasBookingExpired(Booking booking) {

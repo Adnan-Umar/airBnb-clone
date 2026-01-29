@@ -67,4 +67,7 @@ public class Booking {
     @Column(nullable = false, precision = 10, scale = 2)
     BigDecimal amount;
 
+    @Column(unique = true)
+    String paymentSessionId;
+
 }

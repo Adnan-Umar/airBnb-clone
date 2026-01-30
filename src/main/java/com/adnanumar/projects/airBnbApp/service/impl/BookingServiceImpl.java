@@ -11,8 +11,11 @@ import com.adnanumar.projects.airBnbApp.repository.*;
 import com.adnanumar.projects.airBnbApp.service.BookingService;
 import com.adnanumar.projects.airBnbApp.service.CheckoutService;
 import com.adnanumar.projects.airBnbApp.strategy.PricingService;
+import com.stripe.exception.StripeException;
 import com.stripe.model.Event;
+import com.stripe.model.Refund;
 import com.stripe.model.checkout.Session;
+import com.stripe.param.RefundCreateParams;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -195,7 +198,47 @@ public class BookingServiceImpl implements BookingService {
 
             log.info("Successfully confirmed the booking for booking ID : {}", booking.getId());
         } else {
-            log.warn("Unhandled event type : " + event.getType());
+            log.warn("Unhandled event type : {}", event.getType());
+        }
+    }
+
+    @Override
+    @Transactional
+    public void cancelBooking(Long bookingId) {
+        log.info("Canceling booking with id : {}", bookingId);
+        Booking booking = bookingRepository.findById(bookingId).orElseThrow(() ->
+                new ResourceNotFoundException("Booking not found with id : " + bookingId));
+        User user = getCurrentUser();
+        if (!user.getId().equals(booking.getUser().getId())) {
+            throw new UnAuthorisedException("Booking doesn't belong to this user with id : " + user.getId());
+        }
+
+        if (booking.getBookingStatus() != BookingStatus.CONFIRMED) {
+            throw new IllegalStateException("Only confirmed bookings can be cancelled");
+        }
+
+        booking.setBookingStatus(BookingStatus.CANCELLED);
+        bookingRepository.save(booking);
+
+        inventoryRepository.findAndLockReservedInventory(booking.getRoom().getId(), booking.getCheckInDate(),
+                booking.getCheckOutDate(), booking.getRoomsCount());
+
+        inventoryRepository.cancelBooking(booking.getRoom().getId(), booking.getCheckInDate(),
+                booking.getCheckOutDate(), booking.getRoomsCount());
+
+        // handle the refund
+
+        try {
+            log.info("Initialize refund with booking ID : {}", bookingId);
+            Session session = Session.retrieve(booking.getPaymentSessionId());
+            RefundCreateParams refundParams = RefundCreateParams.builder()
+                    .setPaymentIntent(session.getPaymentIntent())
+                    .build();
+
+            Refund.create(refundParams);
+            log.info("Successfully cancelled and refund the booking for booking ID : {}", booking.getId());
+        } catch (StripeException e) {
+            throw new RuntimeException(e);
         }
     }
 

@@ -79,29 +79,12 @@ public class BookingServiceImpl implements BookingService {
         }
 
         // Reserved the room / update the booked count of inventories
-        for(Inventory inventory : inventoryList) {
-            inventory.setReservedCount(inventory.getReservedCount() + bookingRequest.getRoomsCount());
-        }
+        inventoryRepository.initBooking(room.getId(), bookingRequest.getCheckInDate(),
+                bookingRequest.getCheckOutDate(), bookingRequest.getRoomsCount());
 
-        inventoryRepository.saveAll(inventoryList);
-
-        long nights = ChronoUnit.DAYS.between(
-                bookingRequest.getCheckInDate(),
-                bookingRequest.getCheckOutDate()
-        );
-
-        if (nights <= 0) {
-            throw new IllegalStateException("Invalid check-in / check-out dates");
-        }
-
-        BigDecimal amount = BigDecimal.ZERO;
-
-        for (Inventory inventory : inventoryList) {
-            BigDecimal nightlyPrice = pricingService.calculateDynamicPricing(inventory);
-            amount = amount.add(nightlyPrice);
-        }
-
-        amount = amount.multiply(BigDecimal.valueOf(bookingRequest.getRoomsCount()));
+        // calculate dynamic price
+        BigDecimal priceForOneRoom = pricingService.calculateTotalPrice(inventoryList);
+        BigDecimal totalPrice = priceForOneRoom.multiply(BigDecimal.valueOf(bookingRequest.getRoomsCount()));
 
         Booking booking = Booking.builder()
                 .bookingStatus(BookingStatus.RESERVED)
@@ -111,7 +94,7 @@ public class BookingServiceImpl implements BookingService {
                 .checkOutDate(bookingRequest.getCheckOutDate())
                 .user(getCurrentUser())
                 .roomsCount(bookingRequest.getRoomsCount())
-                .amount(amount)
+                .amount(totalPrice)
                 .build();
 
         booking = bookingRepository.save(booking);

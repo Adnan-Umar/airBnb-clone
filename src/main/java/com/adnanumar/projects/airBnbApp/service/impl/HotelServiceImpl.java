@@ -6,10 +6,12 @@ import com.adnanumar.projects.airBnbApp.dto.RoomDto;
 import com.adnanumar.projects.airBnbApp.entity.Hotel;
 import com.adnanumar.projects.airBnbApp.entity.Room;
 import com.adnanumar.projects.airBnbApp.entity.User;
+import com.adnanumar.projects.airBnbApp.entity.enums.Role;
 import com.adnanumar.projects.airBnbApp.exception.ResourceNotFoundException;
 import com.adnanumar.projects.airBnbApp.exception.UnAuthorisedException;
 import com.adnanumar.projects.airBnbApp.repository.HotelRepository;
 import com.adnanumar.projects.airBnbApp.repository.RoomRepository;
+import com.adnanumar.projects.airBnbApp.repository.UserRepository;
 import com.adnanumar.projects.airBnbApp.service.HotelService;
 import com.adnanumar.projects.airBnbApp.service.InventoryService;
 import lombok.AccessLevel;
@@ -32,6 +34,8 @@ import static com.adnanumar.projects.airBnbApp.util.AppUtils.getCurrentUser;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class HotelServiceImpl implements HotelService {
 
+    private final UserRepository userRepository;
+
     final HotelRepository hotelRepository;
 
     final InventoryService inventoryService;
@@ -41,11 +45,14 @@ public class HotelServiceImpl implements HotelService {
     final RoomRepository roomRepository;
 
     @Override
+    @Transactional
     public HotelDto createNewHotel(HotelDto hotelDto) {
         log.info("Creating a new Hotel with name {}", hotelDto.getName());
+        User user = getCurrentUser();
+        user.getRoles().add(Role.HOTEL_MANAGER);
+        userRepository.save(user);
         Hotel hotel = modelMapper.map(hotelDto, Hotel.class);
         hotel.setActive(false);
-        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         hotel.setOwner(user);
         hotel = hotelRepository.save(hotel);
         log.info("Created a new Hotel with ID : {}", hotel.getId());

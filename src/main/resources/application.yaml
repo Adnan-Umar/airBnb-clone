@@ -4,7 +4,7 @@ spring:
 
 # DB Configuration
   datasource:
-    url: jdbc:postgresql://localhost:5432/airBnbDB
+    url: ${DB_URL}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
   jpa:

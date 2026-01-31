@@ -22,6 +22,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.adnanumar.projects.airBnbApp.util.AppUtils.getCurrentUser;
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -93,6 +95,30 @@ public class RoomServiceImpl implements RoomService {
         inventoryService.deleteAllInventories(room);
         roomRepository.deleteById(roomId);
         log.info("Room is deleted successfully with id {}", roomId);
+    }
+
+    @Override
+    @Transactional
+    public RoomDto updateRoomById(Long hotelId, Long roomId, RoomDto roomDto) {
+        log.info("Updating room with id {}", roomId);
+        Hotel hotel = hotelRepository.findById(hotelId)
+                .orElseThrow(() -> new ResourceNotFoundException("Hotel not found with id : " + hotelId));
+
+        User user = getCurrentUser();
+        if (!user.equals(hotel.getOwner())) {
+            throw new UnAuthorisedException("This User does not own this Hotel with id : " + hotelId);
+        }
+
+        Room room = roomRepository.findById(roomId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Room not found with id : " + roomId));
+
+        modelMapper.map(roomDto, room);
+        room.setId(roomId);
+
+        // TODO: if price or inventory is updated, then update the inventory for this room
+
+        room = roomRepository.save(room);
+        return modelMapper.map(room, RoomDto.class);
     }
 
 }

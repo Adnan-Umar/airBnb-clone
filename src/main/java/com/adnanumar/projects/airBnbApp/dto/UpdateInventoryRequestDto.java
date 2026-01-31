@@ -1,24 +1,22 @@
 package com.adnanumar.projects.airBnbApp.dto;
 
-import com.adnanumar.projects.airBnbApp.entity.enums.Gender;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class UserDto {
+public class UpdateInventoryRequestDto {
 
-    Long id;
+    LocalDate startDate;
 
-    String email;
+    LocalDate endDate;
 
-    String name;
+    BigDecimal surgeFactor;
 
-    Gender gender;
-
-    LocalDate dateOfBirth;
+    Boolean closed;
 
 }

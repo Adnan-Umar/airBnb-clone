@@ -9,16 +9,12 @@ import java.time.LocalDate;
 
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class UserDto {
-
-    Long id;
-
-    String email;
+public class ProfileUpdateRequestDto {
 
     String name;
 
-    Gender gender;
-
     LocalDate dateOfBirth;
+
+    Gender gender;
 
 }

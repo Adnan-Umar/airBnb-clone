@@ -1,6 +1,5 @@
 package com.adnanumar.projects.airBnbApp.dto;
 
-import com.adnanumar.projects.airBnbApp.entity.User;
 import com.adnanumar.projects.airBnbApp.entity.enums.BookingStatus;
 import lombok.AccessLevel;
 import lombok.Data;

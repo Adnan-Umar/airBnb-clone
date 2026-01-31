@@ -2,6 +2,10 @@
 
 Spring Boot backend for an Airbnb-style booking platform. This service exposes REST APIs for authentication, hotel management, inventory, bookings, and Stripe payments.
 
+## Deployed Application
+
+**API Documentation:** https://airbnb-clone-xg0b.onrender.com/api/v1/swagger-ui/index.html
+
 ## Tech Stack
 
 - Java 21

@@ -20,16 +20,22 @@ public class GlobalResponseHandler implements ResponseBodyAdvice<Object> {
     }
 
     @Override
-    public Object beforeBodyWrite(Object body, MethodParameter returnType, MediaType selectedContentType, Class<? extends HttpMessageConverter<?>> selectedConverterType, ServerHttpRequest request, ServerHttpResponse response) {
-        List<String> allowedRoutes = List.of("/v3/api-docs", "/actuator");
+    public Object beforeBodyWrite(Object body, MethodParameter returnType, MediaType selectedContentType,
+                                  Class<? extends HttpMessageConverter<?>> selectedConverterType,
+                                  ServerHttpRequest request, ServerHttpResponse response) {
+        String path = request.getURI().getPath();
 
-        boolean isAllowed = allowedRoutes
-                .stream()
-                .allMatch(route -> request.getURI().getPath().startsWith(route));
+        boolean isSwaggerOrInfra =
+                path.startsWith("/api/v1/v3/api-docs")
+                        || path.startsWith("/api/v1/swagger-ui")
+                        || path.startsWith("/swagger-ui")
+                        || path.startsWith("/v3/api-docs")
+                        || path.startsWith("/actuator");
 
-        if (body instanceof ApiResponse<?> || isAllowed) {
+        if (body instanceof ApiResponse<?> || isSwaggerOrInfra) {
             return body;
         }
+
         return new ApiResponse<>(body);
     }
 

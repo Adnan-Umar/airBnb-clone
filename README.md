@@ -116,7 +116,7 @@ http://localhost:8080/api/v1
 ## OpenAPI / Swagger
 
 If enabled by Springdoc, you can view API documentation at:
-- http://localhost:8080/api/v1/swagger-ui/index.html
+- http://localhost:8080/api/v1/swagger-ui.html
 - http://localhost:8080/api/v1/v3/api-docs
 
 ## Notes

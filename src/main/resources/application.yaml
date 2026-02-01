@@ -25,7 +25,7 @@ jwt:
   secretKey: kfjhvb3i87oiawuwor2aui4ytop8237v5i8ay927b83q237862459r8yvuiwcbwyhUXDETY2OU37IWUTI
 
 frontend:
-  url: http://localhost:8080
+  url: https://airbnb-clone-xg0b.onrender.com
 
 # Stripe configuration
 stripe:

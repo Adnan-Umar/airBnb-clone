@@ -4,7 +4,7 @@ Spring Boot backend for an Airbnb-style booking platform. This service exposes R
 
 ## Deployed Application
 
-**API Documentation:** https://airbnb-clone-xg0b.onrender.com/api/v1/swagger-ui/index.html
+**API Documentation:** https://airbnb-clone-xg0b.onrender.com/api/v1/swagger-ui.html
 
 ## Tech Stack
 

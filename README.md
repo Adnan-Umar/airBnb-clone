@@ -548,45 +548,62 @@ flowchart LR
 ### Full API Map
 
 ```mermaid
-mindmap
-  root((🌐 /api/v1))
-    auth
-      POST /signup
-      POST /login
-      POST /refresh
-    hotels
-      GET /search
-      GET /{id}/info
-    admin/hotels
-      POST /
-      GET /
-      GET /{id}
-      PUT /{id}
-      DELETE /{id}
-      PATCH /{id}/activate
-      GET /{id}/bookings
-      GET /{id}/reports
-      rooms
-        POST /
-        GET /
-        GET /{roomId}
-        PUT /{roomId}
-        DELETE /{roomId}
-    admin/inventory
-      GET /rooms/{roomId}
-      PATCH /rooms/{roomId}
-    bookings
-      POST /init
-      POST /{id}/addGuests
-      POST /{id}/payments
-      POST /{id}/cancel
-      POST /{id}/status
-    users
-      GET /profile
-      PATCH /profile
-      GET /my-bookings
-    webhook
-      POST /payment
+flowchart LR
+    BASE(["🌐 /api/v1"])
+
+    BASE --> AUTH["🔑 /auth"]
+    AUTH --> A1["POST  /signup"]
+    AUTH --> A2["POST  /login"]
+    AUTH --> A3["POST  /refresh"]
+
+    BASE --> HOTELS["🔍 /hotels"]
+    HOTELS --> H1["GET  /search"]
+    HOTELS --> H2["GET  /{hotelId}/info"]
+
+    BASE --> ADMINH["🏨 /admin/hotels"]
+    ADMINH --> AH1["POST  /"]
+    ADMINH --> AH2["GET  /"]
+    ADMINH --> AH3["GET  /{hotelId}"]
+    ADMINH --> AH4["PUT  /{hotelId}"]
+    ADMINH --> AH5["DELETE  /{hotelId}"]
+    ADMINH --> AH6["PATCH  /{hotelId}/activate"]
+    ADMINH --> AH7["GET  /{hotelId}/bookings"]
+    ADMINH --> AH8["GET  /{hotelId}/reports"]
+
+    BASE --> ROOMS["🛏️ /admin/hotels/{hotelId}/rooms"]
+    ROOMS --> R1["POST  /"]
+    ROOMS --> R2["GET  /"]
+    ROOMS --> R3["GET  /{roomId}"]
+    ROOMS --> R4["PUT  /{roomId}"]
+    ROOMS --> R5["DELETE  /{roomId}"]
+
+    BASE --> INV["📦 /admin/inventory"]
+    INV --> I1["GET  /rooms/{roomId}"]
+    INV --> I2["PATCH  /rooms/{roomId}"]
+
+    BASE --> BOOK["📋 /bookings"]
+    BOOK --> B1["POST  /init"]
+    BOOK --> B2["POST  /{bookingId}/addGuests"]
+    BOOK --> B3["POST  /{bookingId}/payments"]
+    BOOK --> B4["POST  /{bookingId}/cancel"]
+    BOOK --> B5["POST  /{bookingId}/status"]
+
+    BASE --> USERS["👤 /users"]
+    USERS --> U1["GET  /profile"]
+    USERS --> U2["PATCH  /profile"]
+    USERS --> U3["GET  /my-bookings"]
+
+    BASE --> WH["🪝 /webhook"]
+    WH --> W1["POST  /payment"]
+
+    style AUTH fill:#cfe2ff,stroke:#0d6efd
+    style HOTELS fill:#d1e7dd,stroke:#198754
+    style ADMINH fill:#fff3cd,stroke:#ffc107
+    style ROOMS fill:#fff3cd,stroke:#ffc107
+    style INV fill:#fff3cd,stroke:#ffc107
+    style BOOK fill:#f8d7da,stroke:#dc3545
+    style USERS fill:#e2e3e5,stroke:#6c757d
+    style WH fill:#f3e5f5,stroke:#9c27b0
 ```
 
 ---
@@ -828,7 +845,7 @@ sequenceDiagram
 
 ```mermaid
 flowchart TD
-    CRON(["⏰ Cron Trigger\n0 0 \* \* \* \*\nevery hour"])
+    CRON(["⏰ Cron Trigger\nevery hour"])
 
     CRON --> FETCH["Fetch hotels\nin batches of 100\n(paginated)"]
     FETCH --> LOOP{"More\nhotels?"}
